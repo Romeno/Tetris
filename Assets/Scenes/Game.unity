@@ -164,7 +164,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 5.4
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -428,6 +428,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1184434519}
   - component: {fileID: 1184434518}
+  - component: {fileID: 1184434520}
   m_Layer: 0
   m_Name: PlayableArea
   m_TagString: Untagged
@@ -453,13 +454,14 @@ MonoBehaviour:
   - {fileID: 8324272884109111928, guid: 1b07dcf3279ee7848891409ab23b34dc, type: 3}
   - {fileID: 5782438518089043577, guid: ac2b8b7fb1ddabc4db2d7ccec3f0a8b8, type: 3}
   - {fileID: 8324272884109111928, guid: fea3bbf6b120a8d49a4de16606f7311d, type: 3}
-  pieceStartSpeed: 2.22
-  pieceSpeed: 0.03
+  - {fileID: 5782438518089043577, guid: 8af7d9b001be6b14bbc5380ef484eb80, type: 3}
+  pieceStartSpeed: 20
+  pieceSpeed: 0.3
   floorHeight: -5
   spawnLeft: {x: -3, y: 5, z: 0}
   spawnRight: {x: 3, y: 5, z: 0}
   horizontalSpeed: 0.25
-  playableAreaSize: {x: 24, y: 40}
+  score: 0
 --- !u!4 &1184434519
 Transform:
   m_ObjectHideFlags: 0
@@ -476,6 +478,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1184434520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1184434517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14e06c8b44f8c1f448782ed63b24b2c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playableAreaSize: {x: 24, y: 40}
+  cellSize: 0.25
 --- !u!1 &1348476115
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class PieceData : MonoBehaviour
 {
-    public Vector3 spawnOffset;
+    public Vector3 piecePivot;
     public int pieceType;
     public Vector2Int pieceSize;
+    public int rotationVariation;
 
     // Start is called before the first frame update
     void Start()

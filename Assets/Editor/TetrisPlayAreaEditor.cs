@@ -34,8 +34,8 @@ public class TetrisPlayAreaEditor : Editor
             var bg = tetris.transform.GetChild(0);
             var grid = tetris.transform.GetChild(1);
 
-            bg.transform.localScale = new Vector3(playableAreaProp.vector2Value.x * cellSizeProp.floatValue, playableAreaProp.vector2Value.y * cellSizeProp.floatValue, 1);
-            grid.GetComponent<SpriteRenderer>().size = new Vector2(playableAreaProp.vector2Value.x * cellSizeProp.floatValue, playableAreaProp.vector2Value.y * cellSizeProp.floatValue);
+            bg.transform.localScale = new Vector3(playableAreaProp.vector2IntValue.x * cellSizeProp.floatValue, playableAreaProp.vector2IntValue.y * cellSizeProp.floatValue, 1);
+            grid.GetComponent<SpriteRenderer>().size = new Vector2(playableAreaProp.vector2IntValue.x * cellSizeProp.floatValue, playableAreaProp.vector2IntValue.y * cellSizeProp.floatValue);
         }
 
         serializedObject.ApplyModifiedProperties();
