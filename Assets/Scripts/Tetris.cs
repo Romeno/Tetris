@@ -29,8 +29,14 @@ public class Tetris : MonoBehaviour
     private Vector3 playAreaTopLeft;
     private float cellSize;
 
+    public PieceDatabase pd;
+
+    public int spawnCount = 1;
+
     void Start()
     {
+        InitPieceDatabase();
+
         playAreaSize = GetComponent<TetrisPlayArea>().playableAreaSize;
         cellSize = GetComponent<TetrisPlayArea>().cellSize;
 
@@ -51,6 +57,11 @@ public class Tetris : MonoBehaviour
         //{
         //    Debug.Log("" + v.x + " " + v.y);
         //}
+    }
+
+    void InitPieceDatabase()
+    {
+
     }
 
     void Update()
@@ -89,18 +100,23 @@ public class Tetris : MonoBehaviour
     Transform SpawnPiece()
     {
         // determine piece type
-        Transform pieceType = pieces[Random.Range(0, pieces.Length)];
+        //Transform pieceType = pieces[Random.Range(0, pieces.Length)];
+        Transform pieceType = pieces[0];
         Vector2Int pieceSize = pieceType.GetComponent<PieceData>().pieceSize;
 
         // determine spawn position at the top of the playable zone 
         Debug.Log(playAreaSize.x - 1 - pieceSize.x);
         Vector3 piecePos = new Vector3(spawnLeft.x + Random.Range(0, playAreaSize.x - pieceSize.x + 1) * cellSize, spawnLeft.y, spawnLeft.z);
-        piecePos = RoundXTo(piecePos, cellSize);
 
-//        Transform pieceType = pieces[1];
+        //Vector3 piecePos;
+        //piecePos = new Vector3(spawnLeft.x + spawnCount * 2 * cellSize, spawnLeft.y, spawnLeft.z);
+        //spawnCount++;
+
+
+        //        Transform pieceType = piecspawnCountes[1];
 
         //mathModel[]
-        
+
         // instantiate piece
         lastPiece = Instantiate(pieceType, piecePos, Quaternion.identity);
 
@@ -121,23 +137,23 @@ public class Tetris : MonoBehaviour
             currentSpeed *= 4;
         }
 
-        lastPiece.transform.Translate(0, -currentSpeed, 0, Space.World);
+        MoveToFarthestFreePos(currentSpeed);
 
-        if (CheckPieceColision())
-        {
-            // lastPiece.y = floorHeight + pieceSize.y * cellSize;
-            Debug.Log("lower");
-            lastPiece.transform.position = new Vector3(lastPiece.transform.position.x, floorHeight + pieceData.pieceSize.y * cellSize, lastPiece.transform.position.z);
+        //if (MoveToFarthestFreePos(currentSpeed))
+        //{
+        //    // lastPiece.y = floorHeight + pieceSize.y * cellSize;
+        //    Debug.Log("lower");
+        //    lastPiece.transform.position = new Vector3(lastPiece.transform.position.x, floorHeight + pieceData.pieceSize.y * cellSize, lastPiece.transform.position.z);
 
-            UpdateMathModel();
+        //    UpdateMathModel();
 
-            lastPiece = null;
-        }
+        //    lastPiece = null;
+        //}
     }
 
     void MovePieceHorizontally(float horizontalInput)
     {
-        Vector2Int mathModelPos = GlobalPos2MathModelPos(lastPiece.transform.position);
+        Vector2 mathModelPos = GlobalPos2MathModelPos(lastPiece.transform.position);
         PieceData pieceData = lastPiece.GetComponent<PieceData>();
         bool canMove = true;
 
@@ -318,29 +334,186 @@ public class Tetris : MonoBehaviour
         }
     }
 
-    bool CheckPieceColision()
+    void MoveToFarthestFreePos(float speed)
     {
         PieceData pieceData = lastPiece.GetComponent<PieceData>();
 
-        switch (pieceData.pieceType)
+        int type = pieceData.pieceType * 10 + pieceData.rotationVariation;
+        int obstacleY = 10000;
+        int closestObstacleY = obstacleY;
+        int j = 0;
+        Vector2 pieceMathPos;
+        int bottomCellOffset;
+
+        switch (type)
         {
             case 0:
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                bottomCellOffset = 1;
+
+                while (j < 3)
+                {
+                    obstacleY = FindFathestFreeCellY(pieceMathPos, bottomCellOffset, j, speed);
+
+                    // save the closest obstacle y of all found
+                    if (closestObstacleY > obstacleY)
+                    {
+                        closestObstacleY = obstacleY;
+                    }
+                    j += 1;
+                }
+
+                if (closestObstacleY != 10000)
+                {
+                    lastPiece.transform.position = MathModelPos2GlobalPos((int)pieceMathPos.x, closestObstacleY - bottomCellOffset);
+
+                    mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x] = lastPiece.GetChild(0);
+                    mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x] = lastPiece.GetChild(1);
+                    mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x + 1] = lastPiece.GetChild(2);
+                    mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x + 2] = lastPiece.GetChild(3);
+
+                    lastPiece = null;
+                }
+                else
+                {
+                    lastPiece.transform.Translate(0, -speed, 0, Space.World);
+                }
+
                 break;
             case 1:
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                bottomCellOffset = 2;
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 2, 0, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 2;
+                }
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 0, 1, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 0;
+                }
+
+                if (closestObstacleY != 10000)
+                {
+                    lastPiece.transform.position = GetPieceTopLeftToPosCorrection() + MathModelPos2GlobalPos((int)pieceMathPos.x, closestObstacleY - bottomCellOffset);
+
+                    mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x] = lastPiece.GetChild(0);
+                    mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x + 1] = lastPiece.GetChild(1);
+                    mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x] = lastPiece.GetChild(2);
+                    mathModel[closestObstacleY - bottomCellOffset + 2][(int)pieceMathPos.x] = lastPiece.GetChild(3);
+
+                    lastPiece = null;
+                }
+                else
+                {
+                    lastPiece.transform.Translate(0, -speed, 0, Space.World);
+                }
                 break;
             case 2:
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                bottomCellOffset = 0;
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 0, 0, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 0;
+                }
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 0, 1, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 0;
+                }
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 1, 2, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 1;
+                }
+
+                if (closestObstacleY != 10000)
+                {
+                    lastPiece.transform.position = GetPieceTopLeftToPosCorrection() + MathModelPos2GlobalPos((int)pieceMathPos.x, closestObstacleY - bottomCellOffset);
+
+                    mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x] = lastPiece.GetChild(0);
+                    mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x + 1] = lastPiece.GetChild(1);
+                    mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x + 2] = lastPiece.GetChild(2);
+                    mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x + 2] = lastPiece.GetChild(3);
+
+                    lastPiece = null;
+                }
+                else
+                {
+                    lastPiece.transform.Translate(0, -speed, 0, Space.World);
+                }
                 break;
             case 3:
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                bottomCellOffset = 2;
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 2, 0, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 2;
+                }
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 2, 1, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 2;
+                }
+
+                if (closestObstacleY != 10000)
+                {
+                    lastPiece.transform.position = GetPieceTopLeftToPosCorrection() + MathModelPos2GlobalPos((int)pieceMathPos.x, closestObstacleY - bottomCellOffset);
+
+                    mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x + 1] = lastPiece.GetChild(0);
+                    mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x + 1] = lastPiece.GetChild(1);
+                    mathModel[closestObstacleY - bottomCellOffset + 2][(int)pieceMathPos.x] = lastPiece.GetChild(2);
+                    mathModel[closestObstacleY - bottomCellOffset + 2][(int)pieceMathPos.x + 1] = lastPiece.GetChild(3);
+
+                    lastPiece = null;
+                }
+                else
+                {
+                    lastPiece.transform.Translate(0, -speed, 0, Space.World);
+                }
                 break;
-            case 4:
+            case 10:
                 break;
-            case 5:
+            case 11:
+                break;
+            case 20:
+                break;
+            case 21:
+                break;
+            case 22:
+                break;
+            case 23:
+                break;
+            case 30:
+                break;
+            case 31:
+                break;
+            case 40:
+                break;
+            case 50:
+                break;
+            case 51:
                 break;
             default:
                 break;
         }
-
-        return lastPiece.transform.position.y - pieceData.pieceSize.y * cellSize - floorHeight < 0.001f;
     }
 
     void UpdateMathModel()
@@ -411,14 +584,60 @@ public class Tetris : MonoBehaviour
         }
     }
 
-    Vector2Int GlobalPos2MathModelPos(Vector3 pos)
+    // returns closeset obstacle y in math model coordinates
+    int FindFathestFreeCellY(Vector2 pieceMathPos, int bottomCellOffset, int xCellOffset, float speed)
     {
-        return new Vector2Int( (int)Mathf.Round((pos.x - playAreaTopLeft.x) / cellSize), -(int)Mathf.Round((pos.y - playAreaTopLeft.y) / cellSize) );
+        int obstacleY = 10000;
+        int i = 0;
+        // does the lowest point of part of the piece (column j) crosses the virtual grid border?
+        while (Mathf.CeilToInt(pieceMathPos.y) + i + bottomCellOffset < pieceMathPos.y + speed / cellSize + bottomCellOffset)
+        {
+            // is the lowest point of part of the piece (column j) lower than playable area boundary?
+            if (Mathf.CeilToInt(pieceMathPos.y) + i + bottomCellOffset >= playAreaSize.y - 1 ||
+                // is the cell beneath the cell we are trying to cross occupied?
+                (Mathf.CeilToInt(pieceMathPos.y) + i + bottomCellOffset + 1 <= playAreaSize.y - 1 &&
+                mathModel[Mathf.CeilToInt(pieceMathPos.y) + i + bottomCellOffset + 1][(int)pieceMathPos.x + xCellOffset] != null))
+            {
+                // if so set closest obstacle y to this cell y
+                obstacleY = Mathf.CeilToInt(pieceMathPos.y) + i + bottomCellOffset;
+                break;
+            }
+            i += 1;
+        }
+
+        return obstacleY;
     }
+
+    Vector3 GetPieceTopLeft()
+    {
+        //Bounds bounds = lastPiece.GetComponent<BoxCollider2D>().bounds;
+
+        //return new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, 0);
+
+        Bounds bounds = lastPiece.transform.GetChild(lastPiece.childCount - 2).GetComponent<SpriteRenderer>().bounds;
+
+        return new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, 0);
+    }
+
+    Vector3 GetPieceTopLeftToPosCorrection()
+    {
+        return lastPiece.transform.position - GetPieceTopLeft();
+    }
+
+    //Vector2Int GlobalPos2MathModelPos(Vector3 pos)
+    //{
+    //    return new Vector2Int( (int)Mathf.Round((pos.x - playAreaTopLeft.x) / cellSize), -(int)Mathf.Round((pos.y - playAreaTopLeft.y) / cellSize) );
+    //}
+
+    Vector2 GlobalPos2MathModelPos(Vector3 pos)
+    {
+        return new Vector2(Mathf.Round((pos.x - playAreaTopLeft.x) / cellSize), -(pos.y - playAreaTopLeft.y) / cellSize);
+    }
+
 
     Vector3 MathModelPos2GlobalPos(int x, int y)
     {
-        return new Vector3((x  + playAreaTopLeft.x) * cellSize, (-y + playAreaTopLeft.y) * cellSize, 0);
+        return new Vector3(x * cellSize + playAreaTopLeft.x, -y * cellSize + playAreaTopLeft.y, 0);
     }
 
     public Vector3 LerpByDistance(Vector3 A, Vector3 B, float x)
