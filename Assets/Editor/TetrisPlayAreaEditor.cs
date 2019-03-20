@@ -11,18 +11,11 @@ public class TetrisPlayAreaEditor : Editor
     SerializedProperty playableAreaProp;
     SerializedProperty cellSizeProp;
 
-    private void PrefabUpdated(GameObject go)
-    {
-        Debug.Log(go + " updated");
-    }
-
     void OnEnable()
     {
         // Setup the SerializedProperties.
         playableAreaProp = serializedObject.FindProperty("playableAreaSize");
         cellSizeProp = serializedObject.FindProperty("cellSize");
-
-        PrefabUtility.prefabInstanceUpdated = PrefabUpdated;
 
         Debug.Log("Enable");
     }

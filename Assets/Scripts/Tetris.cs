@@ -5,6 +5,21 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
+public class CMP: IComparer<Transform>
+{
+    // Call CaseInsensitiveComparer.Compare with the parameters reversed.
+    public int Compare(Transform t1, Transform t2)
+    {
+        if (t1.position.y == t2.position.y)
+        {
+            return t1.position.x < t2.position.x ? -1 : 1;
+        }
+        else
+        {
+            return t1.position.y > t2.position.y ? -1 : 1;
+        }
+    }
+}
 
 public class Tetris : MonoBehaviour
 {
@@ -29,16 +44,16 @@ public class Tetris : MonoBehaviour
     private Vector3 playAreaTopLeft;
     private float cellSize;
 
-    public PieceDatabase pd;
+    public PieceDatabase pieceDatabase;
 
     public int spawnCount = 1;
 
     void Start()
     {
-        InitPieceDatabase();
-
         playAreaSize = GetComponent<TetrisPlayArea>().playableAreaSize;
         cellSize = GetComponent<TetrisPlayArea>().cellSize;
+
+        InitPieceDatabase();
 
         mathModel = new List<Transform[]>(playAreaSize.y);
         for (int i = 0; i < playAreaSize.y; i++)
@@ -61,7 +76,64 @@ public class Tetris : MonoBehaviour
 
     void InitPieceDatabase()
     {
+        float fullRotation = 0;
+        CMP comparer = new CMP();
 
+        for (int i = 0; i < pieceDatabase.pieceTypes.Length; i++)
+        {
+            PieceType pt = pieceDatabase.pieceTypes[i];
+            GameObject go = Instantiate(pt.prefab, new Vector3(-100, -100, 0), Quaternion.identity);
+
+            if (pt.rotations.Length != 0)
+            {
+                pt.pieceRotations = new PieceRotation[pt.rotations.Length];
+            }
+            else
+            {
+                pt.pieceRotations = new PieceRotation[1];
+            }
+            
+            SpriteRenderer area = go.transform.GetChild(go.transform.childCount - 2).GetComponent<SpriteRenderer>();
+
+            Transform[] children = new Transform[go.transform.childCount - 2];
+            for (int k = 0; k < go.transform.childCount - 2; k++)
+            {
+                children[k] = go.transform.GetChild(k);
+            }
+
+            fullRotation = 0;
+            for (int j = 0; j < pt.pieceRotations.Length; j++)
+            {
+                Bounds bounds = area.bounds;
+
+                pt.pieceRotations[j] = new PieceRotation();
+                pt.pieceRotations[j].cells = new int[(int)(bounds.extents.y * 2 / cellSize), (int)(bounds.extents.x * 2 / cellSize)];
+                pt.pieceRotations[j].rotation = fullRotation;
+
+                //System.Array.Sort(children, (t1, t2) => (t1.position.y > t2.position.y || t1.position.x > t2.position.x) ? 1 : -1);
+                System.Array.Sort(children, comparer);
+
+                for (int k = 0; k < children.Length; k++)
+                {
+                    Vector3 localPos = children[k].position - GetPieceTopLeft(go.transform);
+                    float centerX = localPos.x / cellSize;
+                    float centerY = localPos.y / cellSize;
+                    string name = children[k].name;
+                    pt.pieceRotations[j].cells[
+                        -Mathf.FloorToInt(Mathf.Abs(centerY)) * (int)Mathf.Sign(centerY), 
+                        Mathf.FloorToInt(Mathf.Abs(centerX)) * (int)Mathf.Sign(centerX)
+                        ] = System.Convert.ToInt32(name.Substring(name.Length - 1 , 1));
+                }
+
+                if (pt.rotations.Length != 0)
+                {
+                    fullRotation += pt.rotations[j];
+                    go.transform.RotateAround(go.transform.GetChild(go.transform.childCount - 1).position, Vector3.forward, pt.rotations[j]);
+                }
+            }
+
+            GameObject.Destroy(go);
+        }
     }
 
     void Update()
@@ -341,26 +413,35 @@ public class Tetris : MonoBehaviour
         int type = pieceData.pieceType * 10 + pieceData.rotationVariation;
         int obstacleY = 10000;
         int closestObstacleY = obstacleY;
-        int j = 0;
         Vector2 pieceMathPos;
         int bottomCellOffset;
+        //MovePieceToFrathestFreePos(speed, type);
 
         switch (type)
         {
             case 0:
-                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft(lastPiece));
                 bottomCellOffset = 1;
 
-                while (j < 3)
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 1, 0, speed);
+                if (closestObstacleY > obstacleY)
                 {
-                    obstacleY = FindFathestFreeCellY(pieceMathPos, bottomCellOffset, j, speed);
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 1;
+                }
 
-                    // save the closest obstacle y of all found
-                    if (closestObstacleY > obstacleY)
-                    {
-                        closestObstacleY = obstacleY;
-                    }
-                    j += 1;
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 1, 1, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 1;
+                }
+
+                obstacleY = FindFathestFreeCellY(pieceMathPos, 1, 2, speed);
+                if (closestObstacleY > obstacleY)
+                {
+                    closestObstacleY = obstacleY;
+                    bottomCellOffset = 1;
                 }
 
                 if (closestObstacleY != 10000)
@@ -381,7 +462,7 @@ public class Tetris : MonoBehaviour
 
                 break;
             case 1:
-                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft(lastPiece));
                 bottomCellOffset = 2;
 
                 obstacleY = FindFathestFreeCellY(pieceMathPos, 2, 0, speed);
@@ -415,7 +496,7 @@ public class Tetris : MonoBehaviour
                 }
                 break;
             case 2:
-                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft(lastPiece));
                 bottomCellOffset = 0;
 
                 obstacleY = FindFathestFreeCellY(pieceMathPos, 0, 0, speed);
@@ -456,7 +537,7 @@ public class Tetris : MonoBehaviour
                 }
                 break;
             case 3:
-                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft());
+                pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft(lastPiece));
                 bottomCellOffset = 2;
 
                 obstacleY = FindFathestFreeCellY(pieceMathPos, 2, 0, speed);
@@ -513,6 +594,54 @@ public class Tetris : MonoBehaviour
                 break;
             default:
                 break;
+        }
+    }
+
+    void MovePieceToFrathestFreePos(float speed, int type)
+    {
+        int obstacleY = 10000;
+        int closestObstacleY = obstacleY;
+        Vector2 pieceMathPos;
+        int bottomCellOffset;
+
+        pieceMathPos = GlobalPos2MathModelPos(GetPieceTopLeft(lastPiece));
+        bottomCellOffset = 1;
+
+        obstacleY = FindFathestFreeCellY(pieceMathPos, 1, 0, speed);
+        if (closestObstacleY > obstacleY)
+        {
+            closestObstacleY = obstacleY;
+            bottomCellOffset = 1;
+        }
+
+        obstacleY = FindFathestFreeCellY(pieceMathPos, 1, 1, speed);
+        if (closestObstacleY > obstacleY)
+        {
+            closestObstacleY = obstacleY;
+            bottomCellOffset = 1;
+        }
+
+        obstacleY = FindFathestFreeCellY(pieceMathPos, 1, 2, speed);
+        if (closestObstacleY > obstacleY)
+        {
+            closestObstacleY = obstacleY;
+            bottomCellOffset = 1;
+        }
+
+        if (closestObstacleY != 10000)
+        {
+            lastPiece.transform.position = MathModelPos2GlobalPos((int)pieceMathPos.x, closestObstacleY - bottomCellOffset);
+
+            mathModel[closestObstacleY - bottomCellOffset][(int)pieceMathPos.x] = lastPiece.GetChild(0);
+            mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x] = lastPiece.GetChild(1);
+            mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x + 1] = lastPiece.GetChild(2);
+            mathModel[closestObstacleY - bottomCellOffset + 1][(int)pieceMathPos.x + 2] = lastPiece.GetChild(3);
+
+            lastPiece = null;
+        }
+        else
+        {
+            lastPiece.transform.Translate(0, -speed, 0, Space.World);
         }
     }
 
@@ -608,20 +737,20 @@ public class Tetris : MonoBehaviour
         return obstacleY;
     }
 
-    Vector3 GetPieceTopLeft()
+    Vector3 GetPieceTopLeft(Transform piece)
     {
         //Bounds bounds = lastPiece.GetComponent<BoxCollider2D>().bounds;
 
         //return new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, 0);
 
-        Bounds bounds = lastPiece.transform.GetChild(lastPiece.childCount - 2).GetComponent<SpriteRenderer>().bounds;
+        Bounds bounds = piece.GetChild(piece.childCount - 2).GetComponent<SpriteRenderer>().bounds;
 
         return new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, 0);
     }
 
     Vector3 GetPieceTopLeftToPosCorrection()
     {
-        return lastPiece.transform.position - GetPieceTopLeft();
+        return lastPiece.transform.position - GetPieceTopLeft(lastPiece);
     }
 
     //Vector2Int GlobalPos2MathModelPos(Vector3 pos)

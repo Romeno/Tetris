@@ -463,6 +463,8 @@ MonoBehaviour:
   spawnRight: {x: 3, y: 5, z: 0}
   horizontalSpeed: 0.25
   score: 0
+  pieceDatabase: {fileID: 11400000, guid: 84c9546699406ca4d859ae8113064435, type: 2}
+  spawnCount: 0
 --- !u!4 &1184434519
 Transform:
   m_ObjectHideFlags: 0
