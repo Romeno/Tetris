@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6df95cc60481eb14785ffa72e90a0217, type: 3}
   m_Name: Test
   m_EditorClassIdentifier: 
-  type: 0
-  rotations: []
-  prefab: {fileID: 0}
+  id: 0
+  rotations:
+  - -90
+  - -90
+  - -90
+  - -90
+  prefab: {fileID: 8324272884109111929, guid: 6919ecc54d7f0094b80fc435cc80a051, type: 3}
