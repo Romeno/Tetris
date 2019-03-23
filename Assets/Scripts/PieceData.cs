@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class PieceData : MonoBehaviour
 {
-    public Vector3 piecePivot;
-    public int pieceType;
-    public Vector2Int pieceSize;
+    public PieceType type;
+
+    [System.NonSerialized]
     public int rotationVariation;
 
     // Start is called before the first frame update
