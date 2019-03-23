@@ -70,11 +70,14 @@ public class Tetris : MonoBehaviour
     {
         float fullRotation = 0;
         PieceTopLeftHandComparer comparer = new PieceTopLeftHandComparer();
+        Vector3 prevTopLeft, topLeft;
 
         for (int i = 0; i < pieceDatabase.pieceTypes.Length; i++)
         {
             PieceType pt = pieceDatabase.pieceTypes[i];
             GameObject go = Instantiate(pt.prefab, new Vector3(-100, -100, 0), Quaternion.identity);
+            prevTopLeft = Vector3.zero;
+            topLeft = Vector3.zero;
 
             if (pt.rotations.Length != 0)
             {
@@ -104,9 +107,11 @@ public class Tetris : MonoBehaviour
 
                 System.Array.Sort(children, comparer);
 
+                topLeft = GetPieceTopLeft(go.transform);
+
                 for (int k = 0; k < children.Length; k++)
                 {
-                    Vector3 localPos = children[k].position - GetPieceTopLeft(go.transform);
+                    Vector3 localPos = children[k].position - topLeft;
                     float centerX = localPos.x / cellSize;
                     float centerY = localPos.y / cellSize;
                     string name = children[k].name;
@@ -120,11 +125,23 @@ public class Tetris : MonoBehaviour
                 FindPieceRotationLeftCells(pt.pieceRotations[j]);
                 FindPieceRotationRightCells(pt.pieceRotations[j]);
 
+                // need to account topLeft offset when chacking for space when doing rotation
+                if (prevTopLeft == Vector3.zero)
+                {
+                    pt.pieceRotations[j].topLeftOffset = Vector3.zero;
+                }
+                else
+                {
+                    pt.pieceRotations[j].topLeftOffset = topLeft - prevTopLeft;
+                }
+
                 if (pt.rotations.Length != 0)
                 {
                     fullRotation += pt.rotations[j];
                     go.transform.RotateAround(go.transform.GetChild(go.transform.childCount - 1).position, Vector3.forward, pt.rotations[j]);
                 }
+
+                prevTopLeft = topLeft;
             }
 
             GameObject.Destroy(go);
@@ -282,77 +299,6 @@ public class Tetris : MonoBehaviour
             }
         }
 
-        //// left
-        //if (Mathf.Sign(horizontalInput) < 0)
-        //{
-        //    switch (pieceData.pieceType)
-        //    {
-        //        case 0:
-        //            canMove = canMove && mathModelPos.x > 0 && 
-        //                mathModel[mathModelPos.y - 1][mathModelPos.x] == null && mathModel[mathModelPos.y - 1][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 1:
-        //            canMove = canMove && mathModelPos.x > 0 && 
-        //                mathModel[mathModelPos.y - 1][mathModelPos.x] == null && mathModel[mathModelPos.y - 1][mathModelPos.x + 1] == null &&
-        //                mathModel[mathModelPos.y - 1][mathModelPos.x + 2] == null && mathModel[mathModelPos.y - 1][mathModelPos.x + 3] == null;
-        //            break;
-        //        case 2:
-        //            canMove = canMove && mathModelPos.x > 0 &&
-        //                mathModel[mathModelPos.y][mathModelPos.x] == null && mathModel[mathModelPos.y - 1][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 3:
-        //            canMove = canMove && mathModelPos.x > 0 &&
-        //                mathModel[mathModelPos.y][mathModelPos.x] == null && mathModel[mathModelPos.y - 1][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 4:
-        //            canMove = canMove && mathModelPos.x > 0 &&
-        //                mathModel[mathModelPos.y - 1][mathModelPos.x] == null && mathModel[mathModelPos.y - 1][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 5:
-        //            canMove = canMove && mathModelPos.x > 0 &&
-        //                mathModel[mathModelPos.y - 1][mathModelPos.x] == null && mathModel[mathModelPos.y][mathModelPos.x + 1] == null;
-        //            break;
-        //        default:
-        //            Debug.Log($"MoveHorizontally left pieceType unknown {pieceData.pieceType}");
-        //            break;
-        //    }
-        //}
-        //// rigth
-        //else
-        //{
-        //    switch (pieceData.pieceType)
-        //    {
-        //        case 0:
-        //            canMove = canMove && mathModelPos.x < playAreaSize.x &&
-        //                mathModel[mathModelPos.y + 1][mathModelPos.x] == null && mathModel[mathModelPos.y + 3][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 1:
-        //            canMove = canMove && mathModelPos.x < playAreaSize.x &&
-        //                mathModel[mathModelPos.y + 1][mathModelPos.x] == null && mathModel[mathModelPos.y + 1][mathModelPos.x + 1] == null &&
-        //                mathModel[mathModelPos.y + 1][mathModelPos.x + 2] == null && mathModel[mathModelPos.y + 1][mathModelPos.x + 3] == null;
-        //            break;
-        //        case 2:
-        //            canMove = canMove && mathModelPos.x < playAreaSize.x &&
-        //                mathModel[mathModelPos.y + 2][mathModelPos.x] == null && mathModel[mathModelPos.y + 3][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 3:
-        //            canMove = canMove && mathModelPos.x < playAreaSize.x &&
-        //                mathModel[mathModelPos.y + 3][mathModelPos.x] == null && mathModel[mathModelPos.y + 2][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 4:
-        //            canMove = canMove && mathModelPos.x < playAreaSize.x &&
-        //                mathModel[mathModelPos.y + 2][mathModelPos.x] == null && mathModel[mathModelPos.y + 2][mathModelPos.x + 1] == null;
-        //            break;
-        //        case 5:
-        //            canMove = canMove && mathModelPos.x < playAreaSize.x &&
-        //                mathModel[mathModelPos.y + 2][mathModelPos.x] == null && mathModel[mathModelPos.y + 3][mathModelPos.x + 1] == null;
-        //            break;
-        //        default:
-        //            Debug.Log($"MoveHorizontally right pieceType unknown {pieceData.pieceType}");
-        //            break;
-        //    }
-        //}
-
         if (canMove)
         {
             lastPiece.transform.Translate(Mathf.Sign(horizontalInput) * horizontalSpeed, 0, 0, Space.World);
@@ -361,9 +307,7 @@ public class Tetris : MonoBehaviour
 
     void RotatePiece()
     {
-        bool canRotate = true;
-
-        if (canRotate)
+        if (CheckCanRotate())
         {
             GetComponent<AudioSource>().Play();
 
@@ -377,6 +321,39 @@ public class Tetris : MonoBehaviour
                 }
             }
         }
+    }
+
+    bool CheckCanRotate()
+    {
+        bool canRotate = true;
+        int nextRotation = lastPieceData.rotationVariation;
+        Vector2 pos = GlobalPos2MathModelPos(GetPieceTopLeft(lastPiece));
+
+        nextRotation += 1;
+        if (nextRotation % lastPieceData.type.rotations.Length == 0)
+        {
+            lastPieceData.rotationVariation = 0;
+        }
+        PieceRotation pNextR = lastPieceData.type.pieceRotations[nextRotation];
+
+        for (int i = 0; i < pNextR.cells.GetLength(0); i++)
+        {
+            for (int j = 0; j < pNextR.cells.GetLength(1); j++)
+            {
+                if (pNextR.cells[i, j] != 0)
+                {
+                    float y = pos.y + (int)(pNextR.topLeftOffset.y / cellSize) + i;
+                    int x = (int)pos.x + (int)(pNextR.topLeftOffset.x / cellSize) + j;
+
+                    if (mathModel[Mathf.CeilToInt(y)][x] != null || mathModel[Mathf.FloorToInt(y)][x] != null)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return canRotate;
     }
 
     void MovePieceToFarthestFreePos(float speed)
@@ -514,6 +491,7 @@ public class Tetris : MonoBehaviour
         return new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, 0);
     }
 
+    // used to recreate position from topLeft coords
     Vector3 GetPieceTopLeftToPosCorrection()
     {
         return lastPiece.transform.position - GetPieceTopLeft(lastPiece);

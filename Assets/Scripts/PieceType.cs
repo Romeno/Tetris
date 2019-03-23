@@ -6,6 +6,7 @@ public class PieceRotation
 {
     public float rotation;
     public int[,] cells;
+    public Vector2 topLeftOffset;
     public Vector2Int[] bottomCells;
     public Vector2Int[] leftCells;
     public Vector2Int[] rightCells;
