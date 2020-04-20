@@ -219,7 +219,7 @@ public class Tetris : MonoBehaviour
         }
 
         // move piece horizontally responding to player input
-        if (Time.time % 0.1f < 0.016f)
+        if (Time.time % 0.16f < 0.016f)
         {
             float horizontalInput = Input.GetAxisRaw("Horizontal");
 
@@ -246,8 +246,9 @@ public class Tetris : MonoBehaviour
         Bounds bounds = pieceType.GetChild(pieceType.childCount - 2).GetComponent<SpriteRenderer>().bounds;
 
         // determine spawn position
-        Debug.Log(playAreaSize.x - 1 - bounds.extents.x * 2);
-        Vector3 piecePos = new Vector3(spawnLeft.x + Random.Range(0, playAreaSize.x - (int)(bounds.extents.x / cellSize * 2) + 1) * cellSize, spawnLeft.y, spawnLeft.z);
+        float x = spawnLeft.x + Random.Range(0, playAreaSize.x - (int)(bounds.extents.x / cellSize * 2) + 1) * cellSize;
+        Debug.Log(x);
+        Vector3 piecePos = new Vector3(x, spawnLeft.y, spawnLeft.z);
 
         // instantiate piece
         lastPiece = Instantiate(pieceType, piecePos, Quaternion.identity);

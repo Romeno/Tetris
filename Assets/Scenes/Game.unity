@@ -253,7 +253,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 2
-  m_Size: {x: 6, y: 10}
+  m_Size: {x: 2.5, y: 5}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -413,7 +413,7 @@ Transform:
   m_GameObject: {fileID: 1024177586}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 6, y: 10, z: 1}
+  m_LocalScale: {x: 2.5, y: 5, z: 1}
   m_Children: []
   m_Father: {fileID: 1184434519}
   m_RootOrder: 0
@@ -449,18 +449,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ffb05760a5f2074887c3d4b9a6e6041, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pieces:
-  - {fileID: 8324272884109111928, guid: 16584421e7fc73042a6946b29994146d, type: 3}
-  - {fileID: 8324272884109111928, guid: 3d0648f592389ae4194b9b3f281a72cd, type: 3}
-  - {fileID: 8324272884109111928, guid: 1b07dcf3279ee7848891409ab23b34dc, type: 3}
-  - {fileID: 5782438518089043577, guid: ac2b8b7fb1ddabc4db2d7ccec3f0a8b8, type: 3}
-  - {fileID: 8324272884109111928, guid: fea3bbf6b120a8d49a4de16606f7311d, type: 3}
-  - {fileID: 5782438518089043577, guid: 8af7d9b001be6b14bbc5380ef484eb80, type: 3}
-  pieceStartSpeed: 20
+  pieceStartSpeed: 0.03
   pieceSpeed: 0.03
-  floorHeight: -5
-  spawnLeft: {x: -3, y: 5, z: 0}
-  spawnRight: {x: 3, y: 5, z: 0}
+  spawnLeft: {x: -1.25, y: 2.5, z: 0}
+  spawnRight: {x: 1.25, y: 2.5, z: 0}
   horizontalSpeed: 0.25
   score: 0
   pieceDatabase: {fileID: 11400000, guid: 84c9546699406ca4d859ae8113064435, type: 2}
@@ -493,7 +485,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14e06c8b44f8c1f448782ed63b24b2c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playableAreaSize: {x: 24, y: 40}
+  playableAreaSize: {x: 10, y: 20}
   cellSize: 0.25
 --- !u!82 &1184434521
 AudioSource:
